@@ -1,0 +1,23 @@
+from functions.get_file_content import get_file_content
+
+if __name__ == "__main__":
+    result_lorem = get_file_content("calculator", "lorem.txt")
+    print("lorem.txt result:")
+    print(len(result_lorem))
+    print(f"  {result_lorem}")
+    result_main = get_file_content("calculator", "main.py")
+    print("main.py result:")
+    print(len(result_main))
+    print(f"  {result_main}")
+    result_pkg = get_file_content("calculator", "pkg/calculator.py")
+    print("pkg/calculator.py result:")
+    print(len(result_pkg))
+    print(f"  {result_pkg}")
+    result_bin = get_file_content("calculator", "/bin/cat")
+    print("/bin/cat result:")
+    print(len(result_bin))
+    print(f"  {result_bin}")
+    result_dir = get_file_content("calculator", "pkg/does_not_exist.py")
+    print("pkg/does_not_exist.py result:")
+    print(len(result_dir))
+    print(f"  {result_dir}")
