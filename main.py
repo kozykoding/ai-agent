@@ -1,4 +1,4 @@
-import os, argparse
+import os, argparse, sys
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
@@ -22,42 +22,52 @@ messages = [types.Content(role="user", parts=[types.Part(text=args.user_prompt)]
 
 
 def main():
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=messages,
-        config=types.GenerateContentConfig(
-            tools=[available_functions], system_instruction=system_prompt
-        ),
-    )
-    if args.verbose:
-        print(f"User prompt: {args.user_prompt}\n")
-        print("Prompt tokens:", response.usage_metadata.prompt_token_count)
-        print("Response tokens:", response.usage_metadata.candidates_token_count)
-
-    if not response.function_calls:
-        print("Response:")
-        print(response.text)
-        return
-
-    function_responses = []
-    for function_call in response.function_calls:
-        # actually call the function
-        function_call_result = call_function(function_call, args.verbose)
-
-        # validate the result
-        if (
-            not function_call_result.parts
-            or not function_call_result.parts[0].function_response
-            or not function_call_result.parts[0].function_response.response
-        ):
-            raise RuntimeError(f"Empty function response for {function_call.name}")
-
-        # print the result in verbose mode
+    finished = False
+    for _ in range(20):
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=messages,
+            config=types.GenerateContentConfig(
+                tools=[available_functions], system_instruction=system_prompt
+            ),
+        )
+        for candidate in response.candidates:
+            messages.append(candidate.content)
         if args.verbose:
-            print(f"-> {function_call_result.parts[0].function_response.response}")
+            print(f"User prompt: {args.user_prompt}\n")
+            print("Prompt tokens:", response.usage_metadata.prompt_token_count)
+            print("Response tokens:", response.usage_metadata.candidates_token_count)
 
-        # store the part
-        function_responses.append(function_call_result.parts[0])
+        if not response.function_calls:
+            print("Response:")
+            print(response.text)
+            finished = True
+            break
+
+        function_responses = []
+        for function_call in response.function_calls:
+            # actually call the function
+            function_call_result = call_function(function_call, args.verbose)
+
+            # validate the result
+            if (
+                not function_call_result.parts
+                or not function_call_result.parts[0].function_response
+                or not function_call_result.parts[0].function_response.response
+            ):
+                raise RuntimeError(f"Empty function response for {function_call.name}")
+
+            # print the result in verbose mode
+            if args.verbose:
+                print(f"-> {function_call_result.parts[0].function_response.response}")
+
+            # store the part
+            function_responses.append(function_call_result.parts[0])
+        messages.append(types.Content(role="user", parts=function_responses))
+
+    if not finished:
+        print("Agent has hitmax iterations without an answer")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
