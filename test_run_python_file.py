@@ -1,0 +1,21 @@
+from functions.run_python_file import run_python_file
+
+if __name__ == "__main__":
+    result_instruct = run_python_file("calculator", "main.py")
+    print("Instructions:")
+    print(f"  {result_instruct}")
+    result_main = run_python_file("calculator", "main.py", ["3 + 5"])
+    print("main.py result:")
+    print(f"  {result_main}")
+    result_pkg = run_python_file("calculator", "tests.py")
+    print("tests.py result:")
+    print(f"  {result_pkg}")
+    result_notmain = run_python_file("calculator", "../main.py")
+    print("../main.py result:")
+    print(f"  {result_notmain}")
+    result_non = run_python_file("calculator", "nonexistent.py")
+    print("nonexistent.py result:")
+    print(f"  {result_non}")
+    result_lorem = run_python_file("calculator", "lorem.txt")
+    print("lorem.txt result:")
+    print(f"  {result_lorem}")
